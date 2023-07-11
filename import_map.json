@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "dotenv": "https://deno.land/x/dotenv@v3.2.2/load.ts",
+    "throttler": "https://deno.land/x/grammy_transformer_throttler@v1.2.1/mod.ts",
+    "grammy/": "https://deno.land/x/grammy@v1.14.1/",
+    "mongo/": "https://deno.land/x/mongo@v0.30.1/",
+    "cron": "https://deno.land/x/deno_cron@v1.0.0/cron.ts",
+    "server": "https://deno.land/std@0.154.0/http/server.ts",
+    "web_bson": "https://deno.land/x/web_bson@v0.2.3/mod.ts"
+  }
+}
