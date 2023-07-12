@@ -148,6 +148,6 @@ function sleep(ms: number): Promise<void> {
 
 console.log("cron started");
 
-cron("*/1 * * * *", async () => {
+cron("*/5 * * * *", async () => {
 	await notifyReddits();
 });

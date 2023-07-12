@@ -4,7 +4,7 @@ class Config {
 	public token: string;
 	public dbUrl: string;
 	public webhookUrl: string;
-	public port: number;
+	public port : number;
 	public devs: number[];
 
 	constructor() {

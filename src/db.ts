@@ -108,13 +108,13 @@ class RedditDatabase {
 				{ upsert: true },
 			);
 		if (modifiedCount === 0 && upsertedId === null) {
-			throw new Error("Already Subscribed");
+			throw new Error("Already Subscribed to this subreddit");
 		}
 		return true;
 	}
 
 	async getallchatscount(): Promise<number> {
-		return await this.chats.count();
+		return await this.chats.countDocuments();
 	}
 
 	async deleteRedditPostChat(
@@ -129,7 +129,7 @@ class RedditDatabase {
 			},
 		);
 		if (result.modifiedCount === 0) {
-			throw new Error("Not Subscribed");
+			throw new Error("Not Subscribed to this subreddit");
 		}
 		return true;
 	}
@@ -143,7 +143,7 @@ class RedditDatabase {
 			chat: id,
 		}).catch(
 			(): never => {
-				throw "Already connected";
+				throw new Error("Current Chat is already linked to another chat");
 			},
 		);
 	}
@@ -151,7 +151,7 @@ class RedditDatabase {
 	async deleteConnection(chatid: number): Promise<boolean> {
 		return (await this.temp.deleteOne({ _id: chatid })) === 0 &&
 			((): never => {
-				throw new Error("Chat Not Connected");
+				throw new Error("Current Chat is Not linked to any chat");
 			})();
 	}
 

@@ -10,7 +10,7 @@ await bot.init();
 console.info(`Started as @${bot.botInfo.username}`);
 
 bot.use(composer);
-
+bot.catch((err) => console.log(err));
 bot.start({
   drop_pending_updates: true,
   allowed_updates: ["message"],

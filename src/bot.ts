@@ -58,7 +58,7 @@ composer.command("help", (ctx: Context) => {
 	if (ctx.message?.chat?.type === "private") {
 		return reply(
 			ctx,
-			`You can connect your group to bot by using <code>/link</code> command. After that, you can use <code>/sub</code> command to subscribe to subreddits to your group / channel. You can also use <code>/unsub</code> command to remove subreddits from your group. To get the list of subreddits in your group, use <code>/chatsubs</code> command. To disconnect your group from bot, use <code>/unlink</code> command.`,
+			`You can connect your group to bot by using <code>/link</code> command. After that, you can use <code>/sub</code> command to subscribe to subreddits to your group / channel. You can also use <code>/unsub</code> command to remove subreddits from your group. To get the list of subreddits in your group, use <code>/chatsubs</code> command. To disconnect your group from bot, use <code>/unlink</code> command.\n<b>NOTE:</b> You need to be an admin of the group to use these commands. \n\nYou can also make your own bot by forwarding me a bot token. To get a bot token, talk to @BotFather.\n<b>NOTE:</b> You need forward the token with forwarded tag.`,
 			{
 				inline_keyboard: [
 					[
@@ -91,7 +91,8 @@ composer.command("link", async (ctx: Context) => {
 		try {
 			if (await checkadmin(ctx, ctx.from?.id!, chatid)) {
 				await redditDb.storeConnection(ctx.chat?.id, chatid);
-				return reply(ctx, `Connected to <code>${chatid}</code>`);
+				const chat = await ctx.api.getChat(chatid);
+				return reply(ctx, `Connected to <b>${chat.title}</b>`);
 			} else {
 				return reply(
 					ctx,
@@ -114,7 +115,7 @@ composer.command("unlink", async (ctx: Context) => {
 	try {
 		if (await checkadmin(ctx, ctx.from?.id!, ctx.chat?.id!)) {
 			await redditDb.deleteConnection(ctx.chat?.id!);
-			return reply(ctx, `Disconnected from Chat`);
+			return reply(ctx, `Disconnected from <code>${ctx.chat?.id}</code>`);
 		} else {
 			return reply(
 				ctx,
@@ -139,9 +140,10 @@ composer.command("linked", async (ctx: Context) => {
 	}
 	const connected = await redditDb.getConnection(ctx.chat?.id!);
 	if (connected === undefined) {
-		return reply(ctx, "Not connected to any chat");
+		return reply(ctx, "Not connected to any chat yet use <code>/link [chatid]</code> to connect to a chat")
 	}
-	return reply(ctx, `Connected to <code>${connected}</code>`);
+	const chat = await ctx.api.getChat(connected);
+	return reply(ctx, `Connected to <b>${chat.title}</b>`);
 });
 
 // Subscribing to subreddits
@@ -158,8 +160,12 @@ composer.command("sub", async (ctx) => {
 	const args = ctx.message?.text?.split(" ");
 	const connected = await redditDb.getConnection(ctx.chat?.id);
 	if (connected === undefined) {
-		return reply(ctx, "Not connected to a chat");
+		return reply(
+			ctx,
+			"Not connected to any chat yet use <code>/link [chatid]</code> to connect to a chat",
+		);
 	}
+	const chat = await ctx.api.getChat(connected);
 	if (args.length > 1) {
 		const subreddit = reddit.getSubredditFromUrl(args[1]);
 		if (subreddit) {
@@ -171,7 +177,11 @@ composer.command("sub", async (ctx) => {
 							subreddit,
 							ctx.me?.id!,
 						)
-					) && reply(ctx, `Subscribed to <code>${subreddit}</code>`);
+					) &&
+						reply(
+							ctx,
+							`Chat ${chat.title} has subscribed to <code>${subreddit}</code>`,
+						);
 				} else {
 					return reply(ctx, "Invalid subreddit url");
 				}
@@ -203,8 +213,12 @@ composer.command("unsub", async (ctx) => {
 	const args = ctx.message?.text?.split(" ");
 	const connected = await redditDb.getConnection(ctx.chat?.id);
 	if (connected === undefined) {
-		return reply(ctx, "Not connected to a chat");
+		return reply(
+			ctx,
+			"Not connected to any chat yet use <code>/link [chatid]</code> to connect to a chat "
+		);
 	}
+	const chat = await ctx.api.getChat(connected);
 	if (args.length > 1) {
 		try {
 			return (
@@ -213,7 +227,13 @@ composer.command("unsub", async (ctx) => {
 					connected,
 					ctx.me?.id,
 				)
-			) && reply(ctx, `Unsubscribed from <code>${args[1]}</code>`);
+			) &&
+				reply(
+					ctx,
+					`Chat ${chat.title} unsubscribed from <code>${
+						args[1]
+					}</code>`,
+				);
 		} catch (error) {
 			return reply(ctx, error.message);
 		}
@@ -237,9 +257,11 @@ composer.command("chatsubs", async (ctx) => {
 		);
 	}
 	const connected = await redditDb.getConnection(ctx.chat?.id);
+
 	if (connected === undefined) {
-		return reply(ctx, "Not connected to a chat");
+		return reply(ctx, "Not connected to any chat yet use <code>/link [chatid]</code> to connect to a chat");
 	}
+	const chat = await ctx.api.getChat(connected);
 	try {
 		const chats = await redditDb.getChatRedditPosts(
 			connected,
@@ -249,7 +271,7 @@ composer.command("chatsubs", async (ctx) => {
 		}
 		return reply(
 			ctx,
-			`<b>Subcribed Subreddits:</b>\n- ${chats.join("\n- ")}`,
+			`<b>${chat.title} has subcribed to:</b>\n- ${chats.join("\n- ")}`,
 		);
 	} catch (error) {
 		return reply(ctx, error.message);
@@ -267,7 +289,7 @@ composer.command("botstats", async (ctx) => {
 	const allchats = await redditDb.getallchatscount();
 	return reply(
 		ctx,
-		`<b>Bot Stats</b>\n<b>Total Posts:</b> <code>${allposts.length}</code>\n<b>Total Bots:</b> <code>${allbots}</code>\n<b>Total Chats:</b> <code>${allchats}</code>`,
+		`<b>Bot Stats</b>\n\n<b>Total Posts:</b> <code>${allposts.length}</code>\n<b>Total Bots:</b> <code>${allbots}</code>\n<b>Total Chats:</b> <code>${allchats}</code>`,
 	);
 });
 
